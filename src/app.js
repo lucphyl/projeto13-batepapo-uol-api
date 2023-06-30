@@ -16,10 +16,12 @@ dotenv.config();
 const ParticipantsPreset = joi.object({name: joi.string().required()} );
 const messagePreset = joi.object({
     from: joi.string().required(),
-    type: joi.string().required().valid("message", "private_message"),
     to: joi.string().required(),
-    text: joi.string().required()
+    text: joi.string().required(),
+    type: joi.string().required().valid("message", "private_message")
+    
 });
+
 
 
 // mongo connection 
@@ -141,6 +143,32 @@ App.post ("/status", async (request,response) => {
 
     } catch (error){
         response.status(500).send(error.message)
+    }
+})
+
+//removendo usuario inativo
+setInterval(async () =>{
+    const dezsec = Date.now() - 10000
+    try {
+        const inativos = await db.collection("participants").find({lastStatus: {$lt: dezsec}}).toArray()
+
+        if (inativos.length > 0) {
+            const menssagem = inativos.map( inativos => {
+                return {
+                    from: inativos.name,
+                    to: "todos",
+                    text: "sai da sala...",
+                    type: "status",
+                    time: dayjs().format("HH:mm:ss")
+                }
+            })
+
+            await db.collection("messages").insertMany(menssagem)
+            await db.collection("participants").deleteMany({lastStatus: { $lt: dezsec}})
+        }
+
+    } catch (error){
+        response.status(500).send(error.message);
     }
 })
 
