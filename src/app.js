@@ -13,7 +13,7 @@ App.use(express.json());
 dotenv.config();
 
 // Schemas
-const ParticipantsPreset = joi.object({name: joi.string().required()} );
+const ParticipantsPreset = joi.object({name: joi.string().requestuired()} );
 const messagePreset = joi.object({
     from: joi.string().required(),
     to: joi.string().required(),
@@ -81,51 +81,52 @@ try {
 });
 
 // post e get menssagens 
-App.post("/messages", async (req, res) => {
-    const { user } = req.headers
+App.post("/messages", async (request, response) => {
+    const { user } = request.headers
 
-    const validar = messagePreset.validate({ ...req.body, from: user }, { abortEarly: false })
+    const validar = messagePreset.validate({ ...request.body, from: user }, { abortEarly: false })
     if (validar.error) {
-        return res.status(422).send(validar.error.details.map(detail => detail.message))
+        return response.status(422).send(validar.error.details.map(detail => detail.message))
     }
 
     try {
         const participante = await db.collection("participants").findOne({ name: user })
-        if (!participante) return res.sendStatus(422)
+        if (!participante) return response.sendStatus(422)
 
-        const message = { ...req.body, from: user, time: dayjs().format("HH:mm:ss") }
+        const message = { ...request.body, from: user, time: dayjs().format("HH:mm:ss") }
         await db.collection("messages").insertOne(message)
-        res.sendStatus(201)
+        response.sendStatus(201)
 
-    } catch (err) {
-        res.status(500).send(err.message)
+    } catch (error) {
+        response.status(500).send(error.message)
     }
 })
 
-App.get ("/messages", async (request,response) => {
-    const {user} = request.headers;
+App.get("/messages", async (request, response) => {
+    const { user } = request.headers
 
-    const {limit} = request.query;
-    const limitNumber = number(limit);
+    const { limit } = request.query
+    const limitNumber = Number(limit)
 
-    if (limit !== undefined && (limitNumber<=0 || isNaN(limitNumber))) return response.sendStatus(422);
+    if (limit !== undefined && (limitNumber <= 0 || isNaN(limitNumber))) return response.sendStatus(422)
 
     try {
-        const menssagens = await db.collection("messages").find(
-            { $or: [ {from: user}, {to: {$in:["todos", user]}},  {typer: "message"} ] }
-        ).limit(limit === undefined? 0 : limitNumber).sort(({$natural:-1})).toArray();
+        const messages = await db.collection("messages")
+            .find({ $or: [{ from: user }, { to: { $in: ["Todos", user] } }, { type: "message" }] })
+            .sort(({ $natural: -1 }))
+            .limit(limit === undefined ? 0 : limitNumber)
+            .toArray()
 
-        response.send(menssagens);
-
+        response.send(messages)
     } catch (error) {
-        response.status(500).send(error.message);
+        response.status(500).send(err.message)
     }
 
 });
 
 // post status
-App.post ("/status", async (request,response) => {
-    const {user} =  request.headers;
+App.post ("/status", async (requestuest,response) => {
+    const {user} =  requestuest.headers;
 
     if (!user) return response.sendStatus(404);
 
