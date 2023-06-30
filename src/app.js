@@ -81,26 +81,26 @@ try {
 });
 
 // post e get menssagens 
-App.post ("/messages", async (request,response) => {
-    const { to, test, type } = request.body;
-    const { user} = request.headers;
+App.post("/messages", async (req, res) => {
+    const { user } = req.headers
 
-    const valida = messagePresetPreset.validate({...request.body, from: user}, { abortEarly: false});
-    if (valida.error){
-        return response.status(422).send(valida.error.details.map(detail => detail.message))
+    const validar = messageSchema.validate({ ...req.body, from: user }, { abortEarly: false })
+    if (validar.error) {
+        return res.status(422).send(validar.error.details.map(detail => detail.message))
     }
 
     try {
-        const participante = await db.collection("participants").findOne ({name:user})
-        if (!participante) return response.sendStatus(422);
+        const participante = await db.collection("participants").findOne({ name: user })
+        if (!participante) return res.sendStatus(422)
 
-        const message = { ...request.body, from: user, time: dayjs() .format("HH:mm:ss")}
-        await db.collection("messages").insertOne(message);
-        response.sendStatus(201);
-    } catch (error) {
-        response.status(500).send(error.message);
-    };
-});
+        const message = { ...req.body, from: user, time: dayjs().format("HH:mm:ss") }
+        await db.collection("messages").insertOne(message)
+        res.sendStatus(201)
+
+    } catch (err) {
+        res.status(500).send(err.message)
+    }
+})
 
 App.get ("/messages", async (request,response) => {
     const {user} = request.headers;
