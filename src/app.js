@@ -33,6 +33,41 @@ try {
 
 const db = mongoClient.db();
 
+//endpoint
+
+// post participantes
+App.post ('/participantes', async (request,response) => {
+    const { name } = request.body;
+
+    const valida = ParticipantsPreset.validate(request.body, { abortEarly: false});
+    if (valida.error){
+        return response.status(422).send(valida.error.details.map(detail => detail.message))
+    }
+    try {
+        //validação de participantes com mesmo nome
+        const participanteRepetido = await db.collection("participants").findOne({name:name})
+        if(participanteRepetido) return response.sendStatus(409);
+        const marcação = Date.now()
+        await db.collection("participants").insertOne({name, lastStatus: marcação})
+        
+        const menssagem = {
+            from:name ,
+            to:"Todos",
+            text:"entra na sala ",
+            type:"Status",
+            time: dayjs(marcação).format("HH:mm:ss")
+        }
+
+        await db.collection ("messages").insertOne(menssagem)
+
+        response.sendStatus(201);
+    } catch (error) {
+        response.status(500).send(error.message);
+    }
+
+
+    
+})
 
 
 // PORT
