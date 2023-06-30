@@ -121,6 +121,29 @@ App.get ("/messages", async (request,response) => {
 
 });
 
+// post status
+App.post ("/status", async (request,response) => {
+    const {user} =  request.headers;
+
+    if (!user) return response.sendStatus(404);
+
+    
+
+    try{
+        const participante =  await db.collection("participants").findOne({name: user})
+        if (!participante) return response.sendStatus(404);
+
+        const updateUser = await db.collection("participants").updateOne(
+            {name: user}, { $set: { lastStatus: Date.now()}}
+        )
+
+        response.sendStatus(200);
+
+    } catch (error){
+        response.status(500).send(error.message)
+    }
+})
+
 
 // PORT
 const PORT = 5000;
