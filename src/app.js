@@ -84,7 +84,7 @@ try {
 App.post("/messages", async (req, res) => {
     const { user } = req.headers
 
-    const validar = messageSchema.validate({ ...req.body, from: user }, { abortEarly: false })
+    const validar = messagePreset.validate({ ...req.body, from: user }, { abortEarly: false })
     if (validar.error) {
         return res.status(422).send(validar.error.details.map(detail => detail.message))
     }
