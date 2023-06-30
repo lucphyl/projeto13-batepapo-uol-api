@@ -36,7 +36,7 @@ const db = mongoClient.db();
 //endpoint
 
 // post participantes
-App.post ('/participantes', async (request,response) => {
+App.post ("/participants", async (request,response) => {
     const { name } = request.body;
 
     const valida = ParticipantsPreset.validate(request.body, { abortEarly: false});
@@ -67,6 +67,15 @@ App.post ('/participantes', async (request,response) => {
 
 
     
+})
+
+App.get ("/participants", async (request,response) => {
+try {
+     const participantes = await db.collection ("participants").find().toArray()
+    response.send(participantes);
+} catch (error) {
+    response.status(500).send(error.message);
+}
 })
 
 
